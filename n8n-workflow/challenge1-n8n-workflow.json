@@ -1,0 +1,265 @@
+{
+  "name": "Destify Test",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "41c7c98a-3804-4c33-8c1e-ea4b9fa260b3",
+      "name": "Lead Intake Webhook",
+      "webhookId": "8fc864a1-3e80-4b4d-b9ca-1b309c39591b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4ee83bd1-4a8d-4519-830c-3252060fd5f6",
+              "leftValue": "={{ ['true','1','yes','y'].includes(($json.query.forceError ?? '').toString().toLowerCase()) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2f31be24-3fd7-4110-8c49-d2c2e65335af",
+      "name": "If-Check Forced Error Flag"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d04c2784-c7d4-41af-adf0-54d535cd54ee",
+              "name": "ok",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "63c1c6f2-6801-48c0-a1a3-9419e3c9ed1e",
+              "name": "error.message",
+              "value": "Simulated failure",
+              "type": "string"
+            },
+            {
+              "id": "23af09fa-de55-4dd0-8f94-59e116680112",
+              "name": "error.code",
+              "value": "FORCED_ERROR",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "527ed308-ca49-4e0e-93f2-6b2fe5fc9321",
+      "name": "Build Error Response"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a strict information extraction engine. \n\nExtract lead intake fields from the transcript and output only valid JSON.\n\nReturn only valid JSON (no markdown, no extra text) with this exact keys:\nleadName, leadEmail, representative, budget, destinations, guestCountRange, adultsOnly, flightsNeeded.\n\nDo not invent information. Use only what is stated in the transcript.\nIf transcript is empty or missing, return defaults.\n\nIf a field is missing in the transcript, return a safe default:\n- leadName = \"\"\n- leadEmail = \"\"\n- representative = \"\"\n- budget = \"budget\"\n- destinations = []\n- guestCountRange = \"10-20\"\n- adultsOnly = false\n- flightsNeeded = false\n\nbudget must be exactly one of: \"budget\", \"economy\", \"elevated\", \"luxury\".\n\nguestCountRange must be exactly one of: \"< 10\", \"10-20\", \"20-50\", \"50-100\", \"100+\"\nChoose it based on the upper end of the stated guest range.\nIf the upper end is exactly 10 use \"< 10\"; exactly 20 use \"10-20\"; exactly 50 use \"20-50\"; exactly 100 use \"50-100\".\n\ndestinations must be an array of strings (names only).\n\nadultsOnly and flightsNeeded must be booleans true/false (not strings).\nflightsNeeded = true if flights are needed/included/required; false if explicitly not included/not needed; otherwise false.\n\nTranscript:\n{{$json.body.transcript}}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        96
+      ],
+      "id": "4e168cab-1731-44da-9522-7d069b67aa27",
+      "name": "AI – Extract Lead Data",
+      "credentials": {
+        "openAiApi": {
+          "id": "u6H3NXuBWoyvP8j1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const DEFAULTS = {\n  leadName: \"\",\n  leadEmail: \"\",\n  representative: \"\",\n  budget: \"budget\",\n  destinations: [],\n  guestCountRange: \"10-20\",\n  adultsOnly: false,\n  flightsNeeded: false,\n};\n\nconst ALLOWED_BUDGETS = new Set([\"budget\", \"economy\", \"elevated\", \"luxury\"]);\nconst ALLOWED_RANGES = new Set([\"< 10\", \"10-20\", \"20-50\", \"50-100\", \"100+\"]);\n\nfunction getModelText(input) {\n  return (\n    input?.output?.[0]?.content?.[0]?.text ||\n    input?.data?.output?.[0]?.content?.[0]?.text ||\n    \"\"\n  );\n}\n\nfunction parseJsonStrict(text) {\n  try {\n    return JSON.parse(text);\n  } catch (_) {\n    const match = String(text).match(/\\{[\\s\\S]*\\}/);\n    if (!match) throw new Error(\"Model did not return valid JSON.\");\n    return JSON.parse(match[0]);\n  }\n}\n\nfunction normalizeGuestRange(v) {\n  if (typeof v !== \"string\") return DEFAULTS.guestCountRange;\n\n  let s = v.trim();\n\n  if (s === \"<10\") s = \"< 10\";\n  if (s === \"20–50\") s = \"20-50\";\n  if (/20\\s*to\\s*50/i.test(s)) s = \"20-50\";\n  if (/10\\s*to\\s*20/i.test(s)) s = \"10-20\";\n  if (/50\\s*to\\s*100/i.test(s)) s = \"50-100\";\n\n  return ALLOWED_RANGES.has(s) ? s : DEFAULTS.guestCountRange;\n}\n\nfunction normalizeBudget(v) {\n  if (typeof v !== \"string\") return DEFAULTS.budget;\n  const s = v.trim().toLowerCase();\n  return ALLOWED_BUDGETS.has(s) ? s : DEFAULTS.budget;\n}\n\nfunction normalizeDestinations(v) {\n  if (!Array.isArray(v)) return [];\n  return v\n    .map((d) => (typeof d === \"string\" ? d.trim() : \"\"))\n    .filter(Boolean);\n}\n\nfunction toBool(v) {\n  if (typeof v === \"boolean\") return v;\n  if (typeof v === \"string\") {\n    const s = v.trim().toLowerCase();\n    if (s === \"true\") return true;\n    if (s === \"false\") return false;\n  }\n  return Boolean(v);\n}\n\nfunction toTrimmedString(v) {\n  return typeof v === \"string\" ? v.trim() : \"\";\n}\n\n\nconst text = getModelText($json);\n\nif (!text) {\n  throw new Error(\"No model output text found at output[0].content[0].text\");\n}\n\nconst raw = parseJsonStrict(text);\n\nif (!raw || typeof raw !== \"object\" || Array.isArray(raw)) {\n  throw new Error(\"Parsed model output is not an object\");\n}\n\nconst data = {\n  leadName: toTrimmedString(raw.leadName),\n  leadEmail: toTrimmedString(raw.leadEmail),\n  representative: toTrimmedString(raw.representative),\n\n  budget: normalizeBudget(raw.budget),\n  guestCountRange: normalizeGuestRange(raw.guestCountRange),\n  destinations: normalizeDestinations(raw.destinations),\n\n  adultsOnly: toBool(raw.adultsOnly),\n  flightsNeeded: toBool(raw.flightsNeeded),\n};\n\nreturn [{ json: { ok: true, data } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        96
+      ],
+      "id": "f9d8618d-06fc-478f-b71b-8746e20fdc23",
+      "name": "Validate & Normalize AI Output"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{ 400 }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        768,
+        -96
+      ],
+      "id": "ba0d8f34-13e1-4467-bb82-935f64d057ba",
+      "name": "Return Error HTTP Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json.data}}",
+        "options": {
+          "responseCode": "={{ 200 }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1024,
+        96
+      ],
+      "id": "3807b015-edf0-4193-b93e-94b7a01105c5",
+      "name": "Return HTTP Response"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Lead Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "If-Check Forced Error Flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If-Check Forced Error Flag": {
+      "main": [
+        [
+          {
+            "node": "Build Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI – Extract Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Error Response": {
+      "main": [
+        [
+          {
+            "node": "Return Error HTTP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI – Extract Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize AI Output": {
+      "main": [
+        [
+          {
+            "node": "Return HTTP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "49fa2268-be16-4760-9e43-f6162e556bab",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fc9d46a1adef127d71bb2d59ea54baa64db6f58df0f21068db1f62c415abd6b4"
+  },
+  "id": "9Yspl0yQJfIKHGo2",
+  "tags": []
+}
