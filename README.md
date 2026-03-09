@@ -51,6 +51,7 @@ Structured CRM Lead Data
   "flightsNeeded": false
 }
 ```
+```
 ## Architecture diagram
 ┌───────────────┐
 │ React UI      │
@@ -80,3 +81,4 @@ Structured CRM Lead Data
 │ Structured    │
 │ Lead Data     │
 └───────────────┘
+```
