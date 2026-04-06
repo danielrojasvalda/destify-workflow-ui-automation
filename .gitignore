@@ -1,2 +1,4 @@
 .DS_Store
 hubspot-playground/.env.local
+backend/.env
+backend/data/

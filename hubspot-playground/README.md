@@ -21,18 +21,16 @@ This is a standalone Vite + React application designed to help developers build 
 
 1. Install dependencies:
    ```bash
-   bun install
+   npm install
    ```
 2. Start the development server:
    ```bash
-   bun run dev
+   npm run dev
    ```
 3. Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 
-## Destify Technical Assessment Submission - Freddy Rojas
-
-#### Challenge 1 n8n Workflow
+#### n8n Workflow
 
 Implemented an n8n workflow that:
 	•	Accepts transcript input via webhook
@@ -51,15 +49,15 @@ Screenshots:
 ```
 /screenshots/
 ```
-#### Challenge 2 - HubSpot Playground integration
+#### HubSpot Playground integration
 
 Key updates:
-	•	Sends transcript via FormData
-	•	Calls webhook using environment variable
+	•	Sends transcript to the backend API
+	•	Uses a Vite environment variable for the backend base URL
 	•	Handles success and failure states
-	•	Prevents UI crashes with safe JSON parsing
+	•	Includes a compact history and stats dashboard
 	•	Added “Force Error” button for validation
-   •	MAintains original UI architecture.
+   •	Maintains the original UI architecture.
 
 ##### How to Run (Windows / macOS / Linux)
 
@@ -76,7 +74,7 @@ npm run dev
 
 Create a file named .env.local inside hubspot-playground:
 ``` bash
-VITE_N8N_WEBHOOK_URL=http://localhost:5678/webhook/lead-intake
+VITE_API_BASE_URL=http://localhost:3001
 ```
 
 Then open 
@@ -87,5 +85,5 @@ http://localhost:5173
 
 •	Uses npm (not bun)
 •	No OS-specific scripts
-•	Verified with npm run build
+•	Works with the Express + Postgres backend
 •	Environment variables handled via .env.local

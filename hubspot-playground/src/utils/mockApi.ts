@@ -1,40 +1,22 @@
 import { TRANSCRIPT } from '../data/transcript';
 export interface HubSpotWebhookEvent {
-  callbackId: string;
-  origin: {
-    portalId: number;
-    actionDefinitionId: string;
-    actionDefinitionVersion: number;
-  };
-  object: {
-    objectId: number;
-    objectType: string;
-    properties: Record<string, any>;
-  };
-  fields: Record<string, any>;
+  leadName: string;
+  leadEmail: string;
+  representative: string;
+  budget: 'budget' | 'economy' | 'elevated' | 'luxury';
+  destinations: string[];
+  guestCountRange: '< 10' | '10-20' | '20-50' | '50-100' | '100+';
+  adultsOnly: boolean;
+  flightsNeeded: boolean;
 }
 
-export const mockHubSpotWebhook: HubSpotWebhookEvent = {
-  callbackId: 'cb-123456789',
-  origin: {
-    portalId: 9876543,
-    actionDefinitionId: 'custom-automation-action',
-    actionDefinitionVersion: 1,
-  },
-  object: {
-    objectId: 101,
-    objectType: 'CONTACT',
-    properties: {
-      firstname: 'Brian',
-      lastname: 'Halligan',
-      email: 'brian@hubspot.com',
-      company: 'HubSpot',
-    },
-  },
-  fields: {
-    sync_priority: 'high',
-  },
-};
+interface LeadIntakeApiResponse {
+  ok: boolean;
+  data?: HubSpotWebhookEvent;
+  error?: {
+    message?: string;
+  };
+}
 
 export const simulateWorkflowAction = (
   onProgress: (percent: number) => void,
@@ -53,44 +35,35 @@ export const simulateWorkflowAction = (
 
         setTimeout(async () => {
           try {
-            const baseUrl = import.meta.env.VITE_N8N_WEBHOOK_URL as string | undefined;
+            const apiBaseUrl =
+              (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:3001';
 
-            if (!baseUrl) {
-              reject(new Error("Missing VITE_N8N_WEBHOOK_URL (.env.local). Restart dev server after adding it."));
-              return;
-            }
-
-            const url = forceError
-              ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}forceError=true`
-              : baseUrl;
-
-            const form = new FormData();
-            form.append("transcript", TRANSCRIPT);
-
-            const res = await fetch(url, {
-              method: "POST",
-              body: form,
+            const res = await fetch(`${apiBaseUrl}/api/lead-intake`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                transcript: TRANSCRIPT,
+                forceError,
+              }),
             });
 
-            let json: any = null;
-            let text: string = '';
+            let json: LeadIntakeApiResponse | null = null;
 
             try {
-              json = await res.json();
+              json = (await res.json()) as LeadIntakeApiResponse;
             } catch {
-              text = await res.text().catch(() => '');
-}
-            // If your n8n returns { ok:false, error:{message} } treat as failure
-            if (!res.ok || json?.ok === false) {
-              const msg = json?.error?.message ?? json?.message ?? `Webhook failed (${res.status})`;
+              json = null;
+            }
+
+            if (!res.ok || json?.ok === false || !json?.data) {
+              const msg = json?.error?.message ?? `Webhook failed (${res.status})`;
               reject(new Error(msg));
               return;
             }
 
-            // If your n8n returns { ok:true, data:{...}} unwrap to match expected event shape
-            const event = (json?.data ? json.data : json) as HubSpotWebhookEvent;
-
-            resolve(event);
+            resolve(json.data);
           } catch (err: any) {
             reject(err);
           }
