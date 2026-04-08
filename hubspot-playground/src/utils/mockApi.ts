@@ -1,4 +1,3 @@
-import { TRANSCRIPT } from '../data/transcript';
 export interface HubSpotWebhookEvent {
   leadName: string;
   leadEmail: string;
@@ -19,6 +18,7 @@ interface LeadIntakeApiResponse {
 }
 
 export const simulateWorkflowAction = (
+  transcript: string,
   onProgress: (percent: number) => void,
   forceError = false
 ): Promise<HubSpotWebhookEvent> => {
@@ -44,7 +44,7 @@ export const simulateWorkflowAction = (
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                transcript: TRANSCRIPT,
+                transcript,
                 forceError,
               }),
             });

@@ -5,6 +5,7 @@ import type { HubSpotWebhookEvent } from '../utils/mockApi';
 import { fetchLeadHistory, fetchLeadStats, type LeadHistoryItem, type LeadStats } from '../utils/historyApi';
 import { LeadHistoryPanel } from './LeadHistoryPanel';
 import { StatsPanel } from './StatsPanel';
+import { TRANSCRIPT } from '../data/transcript';
 import './Playground.css';
 
 const fetchDashboardSnapshot = async (representative?: string, budget?: string) => {
@@ -31,6 +32,7 @@ export const Playground: React.FC = () => {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [representativeFilter, setRepresentativeFilter] = useState('');
   const [budgetFilter, setBudgetFilter] = useState('');
+  const [transcript, setTranscript] = useState(TRANSCRIPT);
 
   const loadDashboardData = async ({
     showLoading = true,
@@ -84,13 +86,22 @@ export const Playground: React.FC = () => {
   }, [representativeFilter, budgetFilter]);
 
   const startSimulation = async (forceError = false) => {
+    const trimmedTranscript = transcript.trim();
+
+    if (!trimmedTranscript) {
+      setWebhookData(null);
+      setError('Please add a transcript before processing the lead.');
+      setProgress(0);
+      return;
+    }
+
     setIsProcessing(true);
     setWebhookData(null);
     setError(null);
     setProgress(0);
     
     try {
-      const data = await simulateWorkflowAction((p) => {
+      const data = await simulateWorkflowAction(trimmedTranscript, (p) => {
         setProgress(p);
     }, forceError);
     
@@ -126,6 +137,21 @@ export const Playground: React.FC = () => {
     <div className="playground-container">
       <main className="playground-stage">
         <div className="stage-content">
+          <section className="transcript-editor">
+            <div className="transcript-editor__header">
+              <h2>Transcript Input</h2>
+              <p>Paste or edit the lead intake transcript here before sending it to the backend.</p>
+            </div>
+
+            <textarea
+              className="transcript-editor__textarea"
+              value={transcript}
+              onChange={(event) => setTranscript(event.target.value)}
+              placeholder="Paste the transcript you want to process"
+              disabled={isProcessing}
+            />
+          </section>
+
           <div className="card-wrapper">
              <CustomCard {...cardProps} />
           </div>
