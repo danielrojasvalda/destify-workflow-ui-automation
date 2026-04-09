@@ -22,7 +22,7 @@ export const LeadHistoryPanel: React.FC<LeadHistoryPanelProps> = ({
   isRefreshing,
 }) => {
   return (
-    <Box padding="medium" border style={{ backgroundColor: 'white', boxShadow: 'var(--hs-shadow-md)' }}>
+    <section className="dashboard-panel">
       <Flex direction="row" justify="between" align="center" gap="medium" style={{ marginBottom: '16px', flexWrap: 'wrap' }}>
         <Box>
           <Heading variant="h2" style={{ marginBottom: '4px' }}>
@@ -60,19 +60,12 @@ export const LeadHistoryPanel: React.FC<LeadHistoryPanelProps> = ({
 
       <div className="history-list">
         {leads.length === 0 ? (
-          <Box padding="medium" style={{ backgroundColor: 'var(--hs-grey-100)', border: '1px solid var(--hs-grey-200)' }}>
+          <div className="dashboard-surface dashboard-surface--padded">
             <Text>No saved leads match the current filters yet.</Text>
-          </Box>
+          </div>
         ) : (
           leads.map((lead) => (
-            <Box
-              key={lead.id}
-              padding="medium"
-              style={{
-                backgroundColor: 'var(--hs-grey-100)',
-                border: '1px solid var(--hs-grey-200)',
-              }}
-            >
+            <div key={lead.id} className="dashboard-surface dashboard-surface--padded">
               <Flex direction="row" justify="between" align="start" gap="medium" style={{ flexWrap: 'wrap' }}>
                 <Box style={{ flex: 1, minWidth: '220px' }}>
                   <Flex direction="row" align="center" gap="small" style={{ marginBottom: '6px', flexWrap: 'wrap' }}>
@@ -105,10 +98,10 @@ export const LeadHistoryPanel: React.FC<LeadHistoryPanelProps> = ({
                   <Text variant="caption">Flights Needed: {lead.flightsNeeded ? 'Yes' : 'No'}</Text>
                 </Box>
               </Flex>
-            </Box>
+            </div>
           ))
         )}
       </div>
-    </Box>
+    </section>
   );
 };

@@ -15,31 +15,23 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats }) => {
   ];
 
   return (
-    <Box padding="medium" border style={{ backgroundColor: 'white', boxShadow: 'var(--hs-shadow-md)' }}>
+    <section className="dashboard-panel">
       <Heading variant="h2" style={{ marginBottom: '16px' }}>
         Demo Snapshot
       </Heading>
 
       <Flex direction="row" gap="medium" style={{ flexWrap: 'wrap' }}>
         {statItems.map((item) => (
-          <Box
-            key={item.label}
-            padding="medium"
-            style={{
-              flex: '1 1 140px',
-              backgroundColor: 'var(--hs-grey-100)',
-              border: '1px solid var(--hs-grey-200)',
-            }}
-          >
+          <div key={item.label} className="dashboard-surface dashboard-surface--padded stats-card">
             <Text variant="micro" style={{ fontWeight: 700, textTransform: 'uppercase', color: 'var(--hs-grey-600)' }}>
               {item.label}
             </Text>
             <Text style={{ fontSize: '24px', fontWeight: 700, color: 'var(--hs-charcoal)' }}>{item.value}</Text>
-          </Box>
+          </div>
         ))}
       </Flex>
 
-      <Box padding="small" style={{ marginTop: '16px', backgroundColor: 'var(--hs-grey-100)' }}>
+      <div className="dashboard-surface dashboard-surface--compact stats-summary">
         <Text variant="caption" style={{ fontWeight: 600, marginBottom: '8px' }}>
           Top Budgets
         </Text>
@@ -48,7 +40,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats }) => {
             ? stats.topBudgets.map((item) => `${item.budget} (${item.count})`).join(', ')
             : 'No lead history yet.'}
         </Text>
-      </Box>
-    </Box>
+      </div>
+    </section>
   );
 };

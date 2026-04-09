@@ -6,7 +6,7 @@ import { fetchLeadHistory, fetchLeadStats, type LeadHistoryItem, type LeadStats 
 import { LeadHistoryPanel } from './LeadHistoryPanel';
 import { StatsPanel } from './StatsPanel';
 import { TRANSCRIPT } from '../data/transcript';
-import './Playground.css';
+import '../styles/Playground.css';
 
 const fetchDashboardSnapshot = async (representative?: string, budget?: string) => {
   const [leadHistory, leadStats] = await Promise.all([
