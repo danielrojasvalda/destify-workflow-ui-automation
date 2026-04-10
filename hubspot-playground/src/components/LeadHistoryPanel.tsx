@@ -28,7 +28,7 @@ export const LeadHistoryPanel: React.FC<LeadHistoryPanelProps> = ({
           <Heading variant="h2" style={{ marginBottom: '4px' }}>
             Recent Lead History
           </Heading>
-          <Text variant="caption">Saved results from the backend SQLite store.</Text>
+          <Text variant="caption">Saved results from the backend DB store.</Text>
         </Box>
 
         <Button variant="secondary" onClick={onRefresh} disabled={isRefreshing}>

@@ -121,10 +121,6 @@ export const Playground: React.FC = () => {
     status: (error ? 'danger' :progress === 100 ? 'success' : isProcessing ? 'info' : 'warning') as any,
     statusLabel: error ? 'Failed' : progress === 100 ? 'Synced' : isProcessing ? 'Processing...' : 'Pending Sync',
     alertMessage: error ? `Error: ${error}` : progress === 100 ? 'Workflow action completed successfully!' : isProcessing ? 'Synchronizing with HubSpot CRM...' : undefined,
-    stats: [
-      { label: 'Monthly Revenue', value: webhookData ? '$4,500' : '$0' },
-      { label: 'Tickets Open', value: webhookData ? '0' : '-' },
-    ],
     progressValue: progress,
     progressLabel: isProcessing ? 'Workflow Action Progress' : 'Last Sync Status',
     isProcessing,

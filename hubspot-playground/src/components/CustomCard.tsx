@@ -6,7 +6,6 @@ interface CustomCardProps {
   description: string;
   status: 'info' | 'success' | 'warning' | 'danger';
   statusLabel: string;
-  stats: Array<{ label: string; value: string }>;
   alertMessage?: string;
   progressValue?: number;
   progressLabel?: string;
@@ -21,7 +20,6 @@ export const CustomCard: React.FC<CustomCardProps> = ({
   description,
   status,
   statusLabel,
-  stats,
   alertMessage,
   progressValue = 0,
   progressLabel = 'Last Sync Status',
@@ -96,20 +94,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
             </Stack>
 
           </Box>
-        ) : (
-          <Box padding="medium" style={{ backgroundColor: 'var(--hs-grey-100)', borderRadius: '8px', border: '1px solid var(--hs-grey-200)' }}>
-            <Flex direction="row" gap="large" justify="between">
-              {stats.map((stat, index) => (
-                <Box key={index} style={{ flex: 1 }}>
-                  <Text variant="micro" style={{ color: 'var(--hs-grey-600)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>
-                    {stat.label}
-                  </Text>
-                  <Text style={{ fontSize: '20px', fontWeight: 700, color: 'var(--hs-charcoal)' }}>{stat.value}</Text>
-                </Box>
-              ))}
-            </Flex>
-          </Box>
-        )}
+        ) : null}
 
         <Box>
            <ProgressBar 
